@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementary Statistics Flashcards</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --fg: #1f1e1b; --muted: #6b6a64; --card: #ffffff;
+    --card-back: #eef5fb; --accent: #1f6fb2; --border: #e2dfd6; --ok: #2f7d4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1a18; --fg: #efede6; --muted: #a09d94; --card: #262522;
+            --card-back: #202a33; --accent: #6db3ee; --border: #3a3834; --ok: #6cc08a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font-family: Georgia, "Times New Roman", serif; min-height: 100vh;
+         display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .9rem; margin-bottom: 16px; font-family: system-ui, sans-serif; }
+  .bar { width: 100%; max-width: 620px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+  .meta { width: 100%; max-width: 620px; display: flex; justify-content: space-between;
+          font: .85rem system-ui, sans-serif; color: var(--muted); margin: 8px 0 14px; }
+  .scene { width: 100%; max-width: 620px; height: 360px; perspective: 1200px; cursor: pointer; }
+  .card { position: relative; width: 100%; height: 100%; transition: transform .5s; transform-style: preserve-3d; }
+  .card.flipped { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+          border: 1px solid var(--border); border-radius: 16px; padding: 28px;
+          display: flex; flex-direction: column; justify-content: center; overflow-y: auto;
+          box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+  .front { background: var(--card); align-items: center; text-align: center; }
+  .back { background: var(--card-back); transform: rotateY(180deg); }
+  .tag { font: .7rem system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase;
+         color: var(--accent); margin-bottom: 10px; }
+  .term { font-size: 1.7rem; line-height: 1.3; }
+  .hint { position: absolute; bottom: 12px; font: .75rem system-ui, sans-serif; color: var(--muted); }
+  .def { font-size: 1.08rem; line-height: 1.5; margin: 0 0 12px; }
+  .ex { font-size: .93rem; line-height: 1.45; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 10px; margin: 0; }
+  .ex b { color: var(--accent); font-family: system-ui, sans-serif; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9em; background: rgba(127,127,127,.15); padding: 1px 5px; border-radius: 4px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  button { font: .9rem system-ui, sans-serif; padding: 9px 16px; border-radius: 10px; cursor: pointer;
+           border: 1px solid var(--border); background: var(--card); color: var(--fg); }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.ok { color: var(--ok); border-color: var(--ok); }
+  .keys { margin-top: 14px; font: .75rem system-ui, sans-serif; color: var(--muted); text-align: center; }
+  @media (max-width: 480px) { .scene { height: 420px; } .term { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+  <h1>Elementary Statistics Flashcards</h1>
+  <div class="sub">Chapter 13 key terms &amp; R functions &middot; click the card to flip</div>
+  <div class="bar"><div id="prog"></div></div>
+  <div class="meta"><span id="count"></span><span id="known">Known: 0</span></div>
+
+  <div class="scene" id="scene" tabindex="0" aria-label="Flashcard">
+    <div class="card" id="card">
+      <div class="face front"><div class="tag" id="cat">Term</div><div class="term" id="term"></div><div class="hint">Click or press Space to flip</div></div>
+      <div class="face back"><div class="tag">Definition</div><p class="def" id="def"></p><p class="ex" id="ex"></p></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="prev">&larr; Prev</button>
+    <button id="flip" class="primary">Flip</button>
+    <button id="next">Next &rarr;</button>
+    <button id="mark" class="ok">&#10003; Mark known</button>
+    <button id="shuffle">Shuffle</button>
+    <button id="reset">Reset</button>
+  </div>
+  <div class="keys">Keys: &larr; &rarr; navigate &middot; Space flip &middot; K mark known</div>
+
+<script>
+const CARDS = [
+ // 13.1 Describing raw data
+ {c:"13.1 Raw data", t:"Statistics", d:"The practice of turning data into information to identify trends and understand features of populations.", e:"In R, raw data are often stored in a data frame, possibly read in from an external file."},
+ {c:"13.1 Raw data", t:"Variable", d:"A characteristic of an individual in a population, whose value can differ between entities within that population.", e:"In <code>mydata</code>: age, sex and humor level are the variables."},
+ {c:"13.1 Raw data", t:"Numeric-continuous variable", d:"Observations are recorded as numbers that can take any value in some interval, to any number of decimal places.", e:"Rainfall of 15 mm or 15.42135 mm both make sense. Chick <code>weight</code> in <code>chickwts</code>."},
+ {c:"13.1 Raw data", t:"Numeric-discrete variable", d:"Naturally numeric, but may take only distinct values (e.g. counts). If the range is restricted, the number of possible values is finite.", e:"Number of heads in 20 coin flips: only integers 0 to 20, never 15.42135."},
+ {c:"13.1 Raw data", t:"Categorical variable", d:"Takes one of a finite number of possibilities, which are not always recorded as numbers. Either nominal or ordinal.", e:"Unlike discrete variables, the values need not be numeric."},
+ {c:"13.1 Raw data", t:"Categorical-nominal variable", d:"A categorical variable whose categories cannot be logically ranked; the order is irrelevant.", e:"Sex (male/female); <code>feed</code> type in <code>chickwts</code>."},
+ {c:"13.1 Raw data", t:"Categorical-ordinal variable", d:"A categorical variable whose categories can be naturally ranked in increasing or decreasing order.", e:"Drug dose: low, medium, high."},
+ {c:"13.1 Raw data", t:"Univariate vs. multivariate data", d:"Univariate: each observation has one component (a single number). Multivariate: more than one component or measurement per observation.", e:"<code>weight</code> is univariate. <code>lat</code> and <code>long</code> together locate a quake (bivariate)."},
+ {c:"13.1 Raw data", t:"Population vs. sample", d:"Population: the entire collection of individuals or entities of interest. Sample: a smaller set drawn from it to represent it, since the whole population is rarely accessible.", e:"Population: all US women who own a cat. Sample: a random selection of them."},
+ {c:"13.1 Raw data", t:"Parameter vs. statistic", d:"A parameter is a characteristic of the population (e.g. true mean \u03bc). A statistic is an estimate computed from a sample (e.g. sample mean x\u0304).", e:"Key difference: does it refer to the sample or the wider population?"},
+
+ // 13.2.1 Centrality
+ {c:"13.2.1 Centrality", t:"Mean (arithmetic mean)", d:"The central \u201cbalance point\u201d: x\u0304 = (x\u2081 + x\u2082 + \u2026 + x\u2099) / n = (1/n) \u03a3 x\u1d62.", e:"Data 2, 4.4, 3, 3, 2, 2.2, 2, 4 give 2.825. In R: <code>mean(xdata)</code>."},
+ {c:"13.2.1 Centrality", t:"Median", d:"The \u201cmiddle magnitude\u201d. Sort the observations; take the middle value if n is odd, or the mean of the two middle values if n is even.", e:"Sorted: 2, 2, 2, 2.2, 3, 3, 4, 4.4 gives (2.2 + 3)/2 = 2.6. In R: <code>median(xdata)</code>."},
+ {c:"13.2.1 Centrality", t:"Mode", d:"The most common observation. Data can have no mode (all unique) or more than one. Used mostly with discrete data, or intervals of continuous data.", e:"The value 2 occurs 3 times, so it is the mode. Find it with <code>table()</code> and <code>xtab[xtab==max(xtab)]</code>."},
+ {c:"13.2.1 Centrality", t:"na.rm argument", d:"Functions like mean, sum, median, max, min and range return NA or NaN if data contain missing values. Setting <code>na.rm=TRUE</code> makes them use only the values present.", e:"<code>mean(c(1,4,NA))</code> gives NA; with <code>na.rm=TRUE</code> gives 2.5. Use only if you know values are missing."},
+ {c:"13.2.1 Centrality", t:"tapply()", d:"Computes a statistic for a numeric vector grouped by a categorical variable. Arguments: the numeric vector, <code>INDEX</code> (grouping variable), <code>FUN</code> (function to apply).", e:"<code>tapply(chickwts$weight, INDEX=chickwts$feed, FUN=mean)</code> gives mean weight per feed type."},
+
+ // 13.2.2 Counts
+ {c:"13.2.2 Counts & proportions", t:"Counts (frequencies) with table()", d:"The most elementary summary of categorical data: the number of observations falling into each category. Obtained in R with <code>table()</code>.", e:"<code>table(chickwts$feed)</code> gives casein 12, horsebean 10, linseed 12, meatmeal 11, soybean 14, sunflower 12."},
+ {c:"13.2.2 Counts & proportions", t:"Proportion", d:"The fraction of observations in a category, a decimal between 0 and 1: count divided by total sample size. The mean of a logical flag vector gives a proportion.", e:"<code>mean(chickwts$feed==\"soybean\")</code> = 0.197."},
+ {c:"13.2.2 Counts & proportions", t:"Percentage", d:"The proportion multiplied by 100, so it lies in [0, 100]. Statisticians usually prefer proportions because of their direct link to probabilities.", e:"Soybean-fed chicks: 0.197 \u00d7 100 \u2248 19.7%."},
+ {c:"13.2.2 Counts & proportions", t:"round()", d:"Rounds numeric output to a given number of decimal places via the <code>digits</code> argument. Default <code>digits=0</code> rounds to the nearest integer.", e:"<code>round(table(chickwts$feed)/nrow(chickwts), digits=3)</code>."},
+
+ // 13.2.3 Quantiles
+ {c:"13.2.3 Quantiles", t:"Quantile & percentile", d:"A value indicating an observation\u2019s rank relative to the others. The pth quantile equals the 100\u00d7pth percentile. The median is the 0.5 quantile (50th percentile).", e:"<code>quantile(xdata, prob=0.8)</code> gives 3.6."},
+ {c:"13.2.3 Quantiles", t:"Quartiles", d:"Lower (first) quartile = 0.25 quantile; median = second quartile (0.5); upper (third) quartile = 0.75 quantile; maximum = fourth quartile.", e:"<code>quantile(chickwts$weight, prob=c(0.25,0.75))</code> gives 204.5 and 323.5."},
+ {c:"13.2.3 Quantiles", t:"Five-number summary & summary()", d:"Minimum, lower quartile, median, upper quartile, maximum (the 0th, 25th, 50th, 75th and 100th percentiles). <code>summary()</code> gives these plus the mean.", e:"<code>summary(xdata)</code>: 2.000, 2.000, 2.600, 2.825 (mean), 3.250, 4.400."},
+ {c:"13.2.3 Quantiles", t:"Skewed distribution (from summary stats)", d:"If the max is much further from the upper quartile than the min is from the lower quartile, and the mean exceeds the median, the distribution stretches to the right (positive skew).", e:"Quake magnitudes at depth < 400 km: median 4.6, mean 4.67, max 6.4."},
+
+ // 13.2.4 Spread
+ {c:"13.2.4 Spread", t:"Sample variance", d:"Measures spread of observations around the mean (loosely the average squared distance): s\u00b2 = \u03a3 (x\u1d62 \u2212 x\u0304)\u00b2 / (n \u2212 1). R uses the n \u2212 1 divisor, giving an unbiased estimate.", e:"<code>var(xdata)</code> = 0.908 (6.355 / 7)."},
+ {c:"13.2.4 Spread", t:"Standard deviation", d:"The square root of the variance, s = \u221as\u00b2. Interpretable on the same scale as the original observations.", e:"<code>sd(xdata)</code> = 0.953. <code>sd(chickwts$weight)</code> = 78.07 g."},
+ {c:"13.2.4 Spread", t:"Interquartile range (IQR)", d:"The width of the middle 50% of the data: IQR = Q(0.75) \u2212 Q(0.25). Not computed relative to the mean.", e:"<code>IQR(xdata)</code> = 1.25. Quake magnitudes (depth < 400 km): 4.9 \u2212 4.4 = 0.5."},
+ {c:"13.2.4 Spread", t:"jitter()", d:"Randomly alters repeated values slightly before plotting to prevent overplotting, making them easier to see.", e:"<code>points(jitter(c(xdata,ydata)), \u2026)</code> in Figure 13-3. Also: <code>yaxt=\"n\"</code> hides the y-axis; <code>bty=\"n\"</code> removes the box."},
+
+ // 13.2.5 Covariance & correlation
+ {c:"13.2.5 Association", t:"Sample covariance", d:"How much two numeric variables \u201cchange together\u201d: r\u2093\u1d67 = \u03a3 (x\u1d62 \u2212 x\u0304)(y\u1d62 \u2212 \u0233) / (n \u2212 1). Positive: y rises as x rises. Negative: y falls as x rises. Zero: no linear relationship. Order doesn\u2019t matter.", e:"<code>cov(xdata, ydata)</code> = 1.479."},
+ {c:"13.2.5 Association", t:"Pearson\u2019s correlation coefficient", d:"Covariance divided by the product of the standard deviations: \u03c1 = r\u2093\u1d67 / (s\u2093 s\u1d67). Always between \u22121 and 1, showing direction and strength of the linear association.", e:"1.479 / (0.953 \u00d7 2.013) = 0.771. <code>cor(xdata, ydata)</code>."},
+ {c:"13.2.5 Association", t:"Interpreting correlation", d:"\u22121 is a perfect negative linear relationship, 0 is none, +1 is perfect positive. Pearson\u2019s only detects straight-line relationships, so a strong non-linear pattern can still give \u03c1 = 0.", e:"Quakes: <code>cor(quakes$mag, quakes$stations)</code> = 0.851, a strong positive association."},
+ {c:"13.2.5 Association", t:"Correlation vs. causation", d:"Correlation does not imply causation. A high correlation between two variables does not mean one causes the other; it only measures association.", e:"Spearman\u2019s and Kendall\u2019s rank coefficients (via <code>cor(..., method=)</code>) don\u2019t require linearity."},
+
+ // 13.2.6 Outliers
+ {c:"13.2.6 Outliers", t:"Outlier", d:"An observation that doesn\u2019t \u201cfit\u201d with the rest of the data: a noticeably extreme value or anomaly. There is no hard-and-fast numeric rule for what counts as one.", e:"In <code>foo</code>, the value 6.0 sits far from the rest, which are centered around 0."},
+ {c:"13.2.6 Outliers", t:"Natural vs. unnatural outliers", d:"Natural: a true, accurate observation from the population. Unnatural: \u201ccontaminated\u201d, e.g. a data entry error. Unnatural ones are often omitted, but the cause is hard to determine; some researchers analyze both ways.", e:"Always inspect raw data (summaries and plots) before running more rigorous analysis."},
+ {c:"13.2.6 Outliers", t:"Impact of outliers", d:"A single extreme value can change results a lot, especially for the mean and anything based on it (variance, covariance, correlation).", e:"<code>mean(foo)</code> = 0.49 vs. <code>mean(foo[-10])</code> = \u22120.122. <code>cor(bar,baz)</code> = 0.457 vs. 0.890 without the outlier."},
+ {c:"13.2.6 Outliers", t:"Robustness", d:"A statistic is robust if it is relatively unaffected by outliers. Quantile-based statistics such as the median and IQR are robust; the mean, variance and covariance are sensitive.", e:"Use the median or IQR when extreme values are suspected."}
+];
+
+let order = CARDS.map((_, i) => i), pos = 0, known = new Set();
+const $ = id => document.getElementById(id);
+const card = $("card");
+
+function render() {
+  const c = CARDS[order[pos]];
+  card.classList.remove("flipped");
+  $("cat").textContent = c.c;
+  $("term").textContent = c.t;
+  $("def").innerHTML = c.d;
+  $("ex").innerHTML = "<b>Example</b><br>" + c.e;
+  $("count").textContent = (pos + 1) + " / " + order.length;
+  $("known").textContent = "Known: " + known.size + " / " + CARDS.length;
+  $("prog").style.width = ((pos + 1) / order.length * 100) + "%";
+  $("mark").textContent = known.has(order[pos]) ? "\u2713 Known (undo)" : "\u2713 Mark known";
+}
+const flip = () => card.classList.toggle("flipped");
+const go = d => { pos = (pos + d + order.length) % order.length; render(); };
+
+$("scene").onclick = flip;
+$("flip").onclick = flip;
+$("next").onclick = () => go(1);
+$("prev").onclick = () => go(-1);
+$("mark").onclick = () => {
+  const i = order[pos];
+  known.has(i) ? known.delete(i) : known.add(i);
+  render();
+};
+$("shuffle").onclick = () => {
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  pos = 0; render();
+};
+$("reset").onclick = () => { order = CARDS.map((_, i) => i); known.clear(); pos = 0; render(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") go(1);
+  else if (e.key === "ArrowLeft") go(-1);
+  else if (e.key === " ") { e.preventDefault(); flip(); }
+  else if (e.key.toLowerCase() === "k") $("mark").click();
+});
+render();
+</script>
+</body>
+</html>

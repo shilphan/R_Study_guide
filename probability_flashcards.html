@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probability Flashcards</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --fg: #1f1e1b; --muted: #6b6a64; --card: #ffffff;
+    --card-back: #fff8ec; --accent: #c4551f; --border: #e2dfd6; --ok: #2f7d4f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1b1a18; --fg: #efede6; --muted: #a09d94; --card: #262522;
+            --card-back: #2f2a22; --accent: #e8814d; --border: #3a3834; --ok: #6cc08a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font-family: Georgia, "Times New Roman", serif; min-height: 100vh;
+         display: flex; flex-direction: column; align-items: center; padding: 24px 16px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .9rem; margin-bottom: 16px; font-family: system-ui, sans-serif; }
+  .bar { width: 100%; max-width: 620px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+  .meta { width: 100%; max-width: 620px; display: flex; justify-content: space-between;
+          font: .85rem system-ui, sans-serif; color: var(--muted); margin: 8px 0 14px; }
+  .scene { width: 100%; max-width: 620px; height: 340px; perspective: 1200px; cursor: pointer; }
+  .card { position: relative; width: 100%; height: 100%; transition: transform .5s; transform-style: preserve-3d; }
+  .card.flipped { transform: rotateY(180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+          border: 1px solid var(--border); border-radius: 16px; padding: 28px;
+          display: flex; flex-direction: column; justify-content: center; overflow-y: auto;
+          box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+  .front { background: var(--card); align-items: center; text-align: center; }
+  .back { background: var(--card-back); transform: rotateY(180deg); }
+  .tag { font: .7rem system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase;
+         color: var(--accent); margin-bottom: 10px; }
+  .term { font-size: 1.7rem; line-height: 1.3; }
+  .hint { position: absolute; bottom: 12px; font: .75rem system-ui, sans-serif; color: var(--muted); }
+  .def { font-size: 1.1rem; line-height: 1.5; margin: 0 0 12px; }
+  .ex { font-size: .95rem; line-height: 1.45; color: var(--muted); border-top: 1px dashed var(--border); padding-top: 10px; margin: 0; }
+  .ex b { color: var(--accent); font-family: system-ui, sans-serif; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px; }
+  button { font: .9rem system-ui, sans-serif; padding: 9px 16px; border-radius: 10px; cursor: pointer;
+           border: 1px solid var(--border); background: var(--card); color: var(--fg); }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.ok { color: var(--ok); border-color: var(--ok); }
+  .keys { margin-top: 14px; font: .75rem system-ui, sans-serif; color: var(--muted); text-align: center; }
+  @media (max-width: 480px) { .scene { height: 400px; } .term { font-size: 1.4rem; } }
+</style>
+</head>
+<body>
+  <h1>Probability Flashcards</h1>
+  <div class="sub">Chapter 15 key terms &middot; click the card to flip</div>
+  <div class="bar"><div id="prog"></div></div>
+  <div class="meta"><span id="count">1 / 21</span><span id="known">Known: 0</span></div>
+
+  <div class="scene" id="scene" tabindex="0" aria-label="Flashcard">
+    <div class="card" id="card">
+      <div class="face front"><div class="tag" id="cat">Term</div><div class="term" id="term"></div><div class="hint">Click or press Space to flip</div></div>
+      <div class="face back"><div class="tag">Definition</div><p class="def" id="def"></p><p class="ex" id="ex"></p></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="prev">&larr; Prev</button>
+    <button id="flip" class="primary">Flip</button>
+    <button id="next">Next &rarr;</button>
+    <button id="mark" class="ok">&#10003; Mark known</button>
+    <button id="shuffle">Shuffle</button>
+    <button id="reset">Reset</button>
+  </div>
+  <div class="keys">Keys: &larr; &rarr; navigate &middot; Space flip &middot; K mark known</div>
+
+<script>
+const CARDS = [
+ {c:"Basics", t:"Probability", d:"A number between 0 and 1 (inclusive) describing the \u201cmagnitude of chance\u201d associated with making a particular observation or statement. Often expressed as a fraction.", e:"Rolling a 5 or 6 on a fair die: Pr(A) = 1/6 + 1/6 = 1/3."},
+ {c:"Basics", t:"Event", d:"A specific outcome that can occur. Its chance is written Pr(A). Pr(A) = 0 means A cannot occur; Pr(A) = 1 means A occurs with certainty.", e:"A = \u201cyou roll a 4 or more\u201d, so Pr(A) = 1/2."},
+ {c:"Basics", t:"Frequentist (classical) probability", d:"The relative frequency with which an event occurs over many identical, objective trials. The default interpretation of probability.", e:"Each side of a fair die has probability 1/6 in any given roll."},
+ {c:"Basics", t:"Bayesian probability", d:"A probability that uses prior knowledge or subjective belief to inform the calculation, rather than an impartial reproducible experiment.", e:"\u201cI think there\u2019s a 0.5 chance my partner is angry that I\u2019m late.\u201d"},
+ {c:"Combining events", t:"Conditional probability, Pr(A|B)", d:"The probability that A occurs, given that B has already occurred. In general Pr(A|B) \u2260 Pr(B|A).", e:"Pr(4 or more | even number) = 2/3, since the evens are 2, 4, 6."},
+ {c:"Combining events", t:"Independent vs. dependent events", d:"Independent if Pr(A|B) = Pr(A). Dependent if Pr(A|B) \u2260 Pr(A). For independent events, Pr(A\u2229B) = Pr(A) \u00d7 Pr(B).", e:"Pr(A|B) = 2/3 \u2260 Pr(A) = 1/2, so the two die events are dependent."},
+ {c:"Combining events", t:"Intersection, Pr(A \u2229 B)", d:"The probability that both A and B occur simultaneously. Pr(A\u2229B) = Pr(A|B) \u00d7 Pr(B) = Pr(B|A) \u00d7 Pr(A).", e:"Even and 4 or more: 2/3 \u00d7 1/2 = 1/3."},
+ {c:"Combining events", t:"Mutually exclusive events", d:"Events that cannot occur simultaneously: Pr(A\u2229B) = 0. Their union simplifies to Pr(A\u222aB) = Pr(A) + Pr(B).", e:"On one die roll, \u201croll a 1\u201d and \u201croll a 6\u201d are mutually exclusive."},
+ {c:"Combining events", t:"Union, Pr(A \u222a B)", d:"The probability that A or B occurs. Pr(A\u222aB) = Pr(A) + Pr(B) \u2212 Pr(A\u2229B). The intersection is subtracted so it isn\u2019t counted twice.", e:"Even or 4 or more: 1/2 + 1/2 \u2212 1/3 = 2/3."},
+ {c:"Combining events", t:"Complement, Pr(\u0100)", d:"The probability that A does not occur: Pr(\u0100) = 1 \u2212 Pr(A).", e:"Not rolling 4 or more: 1 \u2212 1/2 = 1/2 (rolling 1, 2 or 3)."},
+ {c:"Random variables", t:"Random variable", d:"A variable whose specific outcomes arise by chance or through a random (stochastic) mechanism. Considered before an observation has been made.", e:"Y = result of a die roll; W = tomorrow\u2019s maximum temperature."},
+ {c:"Random variables", t:"Realization", d:"An actual observed value of a random variable, once an observation has been made.", e:"Y is the random variable; Y = 5 is a realization."},
+ {c:"Random variables", t:"Probability distribution", d:"The function that defines the probabilities associated with the possible values of a random variable. A mass function if discrete, a density function if continuous.", e:"Table 15-1 gives the distribution for the casino game."},
+ {c:"Discrete", t:"Discrete random variable & probability mass function", d:"Realizations take only certain precise values. The probability mass function gives the probability of each outcome; each lies in [0, 1] and all must sum to exactly 1.", e:"Casino game: \u2212$4 (0.32), $0 (0.48), $1 (0.15), $8 (0.05)."},
+ {c:"Discrete", t:"Cumulative probability", d:"Pr(X \u2264 x): the probability of observing a value less than or equal to x. For discrete variables, sum the mass function up to and including x (cumsum() in R).", e:"Pr(X = 0) = 0.48, but Pr(X \u2264 0) = 0.32 + 0.48 = 0.80."},
+ {c:"Discrete", t:"Mean (expected value) of a discrete random variable", d:"The average outcome expected over many realizations: \u03bc = E[X] = \u03a3 x\u1d62 \u00d7 Pr(X = x\u1d62). Multiply each outcome by its probability and sum.", e:"Casino game: E[X] = \u22120.73, an average loss of $0.73 per turn."},
+ {c:"Discrete", t:"Variance of a random variable", d:"Quantifies variability in the possible realizations: \u03c3\u00b2 = Var[X] = \u03a3 (x\u1d62 \u2212 \u03bc)\u00b2 \u00d7 Pr(X = x\u1d62), equivalently E[X\u00b2] \u2212 \u03bc\u00b2. The standard deviation is its square root.", e:"Casino game: Var = 7.9371, SD \u2248 2.82."},
+ {c:"Continuous", t:"Continuous random variable", d:"Has infinitely many possible realizations, so probabilities are assigned to intervals, not single values. Pr(W = w) = 0 for any specific w, so < and \u2264 give the same answer.", e:"Pr(W \u2264 55.2) is valid; Pr(W = 55.2) is not a meaningful question."},
+ {c:"Continuous", t:"Probability density function (PDF)", d:"The distribution of a continuous random variable. It must satisfy f(w) \u2265 0 everywhere, and the total area underneath must equal 1. Probabilities are areas under the curve.", e:"Picnic temperature: triangle with base 50, height 0.04; area = \u00bd \u00d7 50 \u00d7 0.04 = 1."},
+ {c:"Shape", t:"Symmetry and skew", d:"Symmetric: equally reflected about a center line, so mean = median. Skew (if asymmetric): the direction of the longer tail. Right/positive skew has a longer right tail; left/negative skew a longer left tail.", e:"The casino mass function has mild right skew; the picnic density is perfectly symmetric."},
+ {c:"Shape", t:"Modality (unimodal, bimodal, trimodal)", d:"The number of easily identifiable peaks in a distribution. Unimodal, bimodal and trimodal mean one, two and three peaks respectively.", e:"Both the casino and picnic distributions are unimodal."}
+];
+
+let order = CARDS.map((_, i) => i), pos = 0, known = new Set();
+const $ = id => document.getElementById(id);
+const card = $("card");
+
+function render() {
+  const c = CARDS[order[pos]];
+  card.classList.remove("flipped");
+  $("cat").textContent = c.c;
+  $("term").textContent = c.t;
+  $("def").textContent = c.d;
+  $("ex").innerHTML = "<b>Example</b><br>" + c.e;
+  $("count").textContent = (pos + 1) + " / " + order.length;
+  $("known").textContent = "Known: " + known.size;
+  $("prog").style.width = ((pos + 1) / order.length * 100) + "%";
+  $("mark").textContent = known.has(order[pos]) ? "\u2713 Known (undo)" : "\u2713 Mark known";
+}
+const flip = () => card.classList.toggle("flipped");
+const go = d => { pos = (pos + d + order.length) % order.length; render(); };
+
+$("scene").onclick = flip;
+$("flip").onclick = flip;
+$("next").onclick = () => go(1);
+$("prev").onclick = () => go(-1);
+$("mark").onclick = () => {
+  const i = order[pos];
+  known.has(i) ? known.delete(i) : known.add(i);
+  render();
+};
+$("shuffle").onclick = () => {
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  pos = 0; render();
+};
+$("reset").onclick = () => { order = CARDS.map((_, i) => i); known.clear(); pos = 0; render(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight") go(1);
+  else if (e.key === "ArrowLeft") go(-1);
+  else if (e.key === " ") { e.preventDefault(); flip(); }
+  else if (e.key.toLowerCase() === "k") $("mark").click();
+});
+render();
+</script>
+</body>
+</html>
